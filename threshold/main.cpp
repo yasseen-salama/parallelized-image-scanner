@@ -31,7 +31,7 @@ void thresholdIntegral(cv::Mat& inputMat, cv::Mat& outputMat)
     CV_Assert(sumMat.depth() == CV_32S);
     CV_Assert(sizeof(int) == 4);
 
-    int S = MAX(nRows, nCols) / 8;
+    int S = MAX(nRows, nCols) / 32;
     double T = 0.15;
 
     // perform thresholding
