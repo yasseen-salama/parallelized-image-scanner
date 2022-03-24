@@ -42,7 +42,7 @@ void thresholdIntegral(cv::Mat& inputMat, cv::Mat& outputMat)
     int* p_y1, * p_y2;
     uchar* p_inputMat, * p_outputMat;
       auto start_time = omp_get_wtime();
-#pragma omp parallel for
+#pragma omp parallel for num_threads(36)
     for (int i = 0; i < nRows; ++i)
     {
         y1 = i - s2;
@@ -94,6 +94,7 @@ void thresholdIntegral(cv::Mat& inputMat, cv::Mat& outputMat)
                 p_outputMat[j] = 255;
         }
     }
+    cout << omp_get_wtime() - start_time << " seconds" << endl;
 }
 
 int main(int argc, char* argv[])
@@ -180,6 +181,5 @@ int main(int argc, char* argv[])
     //! [bin_2]
 
     cv::waitKey(0);
-    cout << omp_get_wtime() - start << " seconds" << endl;
     return 0;
 }
