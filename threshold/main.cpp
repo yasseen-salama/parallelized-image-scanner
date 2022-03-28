@@ -104,6 +104,8 @@ int main(int argc, char* argv[])
  //   cv::Mat src = cv::imread(argv[1], cv::IMREAD_GRAYSCALE);
     const char* default_file = "bookpage.jpg";
     const char* filename = argc >= 2 ? argv[1] : default_file;
+          auto start_time = omp_get_wtime();
+    omp_set_num_threads(16);
     // Loads an image
     cv::Mat src = cv::imread( samples::findFile(filename), cv::ImreadModes::IMREAD_GRAYSCALE);
     cv::Mat mSrc;
@@ -179,7 +181,7 @@ int main(int argc, char* argv[])
         cv::imshow("threshold_integral", bw1);
     }
     //! [bin_2]
-
+auto run_time = omp_get_wtime() - start_time;
     cv::waitKey(0);
     return 0;
 }
