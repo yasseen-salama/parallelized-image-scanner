@@ -2,6 +2,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <omp.h>
+
 #include <iostream>
 using namespace cv;
 
@@ -19,10 +20,7 @@ void thresholdIntegral(cv::Mat& inputMat, cv::Mat& outputMat)
     CV_Assert(outputMat.depth() == CV_8U);
     CV_Assert(outputMat.channels() == 1);
 
-    // rows -> height -> y
-    int nRows = inputMat.rows;
-    // cols -> width -> x
-    int nCols = inputMat.cols;
+
 
     // create the integral image
     cv::Mat sumMat;
@@ -31,9 +29,18 @@ void thresholdIntegral(cv::Mat& inputMat, cv::Mat& outputMat)
     CV_Assert(sumMat.depth() == CV_32S);
     CV_Assert(sizeof(int) == 4);
 
+    // rows -> height -> y
+    int nRows = inputMat.rows;
+    // cols -> width -> x
+    int nCols = inputMat.cols;
     int S = MAX(nRows, nCols) / 8;
     double T = 0.15;
 
+    // CV_Assert(sizeof(int) == 4);
+    int* p_y1, * p_y2;
+    uchar* p_inputMat, * p_outputMat;
+    #pragma omp parallel num_threads(16)
+    {
     // perform thresholding
     int s2 = S / 2;
     int x1, y1, x2, y2, count, sum;
@@ -41,10 +48,12 @@ void thresholdIntegral(cv::Mat& inputMat, cv::Mat& outputMat)
     // CV_Assert(sizeof(int) == 4);
     int* p_y1, * p_y2;
     uchar* p_inputMat, * p_outputMat;
-      auto start_time = omp_get_wtime();
-#pragma omp parallel for num_threads(36)
+
+ #pragma omp for 
     for (int i = 0; i < nRows; ++i)
     {
+        int thread_id = omp_get_thread_num();
+        cout << "Thread_id: " << thread_id << endl;
         y1 = i - s2;
         y2 = i + s2;
 
@@ -56,7 +65,7 @@ void thresholdIntegral(cv::Mat& inputMat, cv::Mat& outputMat)
         {
             y2 = nRows - 1;
         }
-
+       
     /*    y1++;
         y2++;*/
 
@@ -64,7 +73,6 @@ void thresholdIntegral(cv::Mat& inputMat, cv::Mat& outputMat)
         p_y2 = sumMat.ptr<int>(y2);
         p_inputMat = inputMat.ptr<uchar>(i);
         p_outputMat = outputMat.ptr<uchar>(i);
-
         for (int j = 0; j < nCols; ++j)
         {
             // set the SxS region
@@ -92,6 +100,8 @@ void thresholdIntegral(cv::Mat& inputMat, cv::Mat& outputMat)
                 p_outputMat[j] = 0;
             else
                 p_outputMat[j] = 255;
+          
+        }
         }
     }
     cout << omp_get_wtime() - start_time << " seconds" << endl;
@@ -104,8 +114,8 @@ int main(int argc, char* argv[])
  //   cv::Mat src = cv::imread(argv[1], cv::IMREAD_GRAYSCALE);
     const char* default_file = "bookpage.jpg";
     const char* filename = argc >= 2 ? argv[1] : default_file;
-          auto start_time = omp_get_wtime();
-    omp_set_num_threads(16);
+    auto start_time = omp_get_wtime();
+    
     // Loads an image
     cv::Mat src = cv::imread( samples::findFile(filename), cv::ImreadModes::IMREAD_GRAYSCALE);
     cv::Mat mSrc;
@@ -170,6 +180,7 @@ int main(int argc, char* argv[])
     //! [bin]
     cv::Mat bw1 = cv::Mat::zeros(gray.size(), CV_8UC1);
     thresholdIntegral(gray, bw1);
+   
 
     // Show binary image
     if (testEnv)
@@ -181,7 +192,8 @@ int main(int argc, char* argv[])
         cv::imshow("threshold_integral", bw1);
     }
     //! [bin_2]
-auto run_time = omp_get_wtime() - start_time;
+    auto run_time = omp_get_wtime() - start_time;
+    cout << "run_time: " << run_time << " s" << endl;
     cv::waitKey(0);
     return 0;
 }
