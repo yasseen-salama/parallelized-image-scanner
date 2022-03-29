@@ -134,7 +134,7 @@ void thresholdIntegralParallel(cv::Mat& inputMat, cv::Mat& outputMat)
         // perform thresholding
     int s2 = S / 2;
 
-#pragma omp parallel for  num_threads(2) shared (nRows,nCols,s2,T,sumMat)
+#pragma omp parallel for  num_threads(1) shared (nRows,nCols,s2,T,sumMat)
 
 
 
