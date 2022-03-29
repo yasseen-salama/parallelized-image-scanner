@@ -134,7 +134,7 @@ void thresholdIntegralParallel(cv::Mat& inputMat, cv::Mat& outputMat)
         // perform thresholding
     int s2 = S / 2;
 
-#pragma omp parallel for simd schedule(simd:static) shared (nRows,nCols,s2,T,sumMat)
+#pragma omp simd 
 
 
 
