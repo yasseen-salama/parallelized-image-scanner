@@ -8,6 +8,25 @@ using namespace cv;
 
 using namespace std;
 
+#if defined(_WIN32) // restrict pointers on windows
+#if defined(_MSC_VER) || defined(__ICL)
+#define __restrict__ __restrict
+#endif
+#endif
+
+#define PRAGMA(X) _Pragma(#X)
+#if defined(__INTEL_COMPILER)
+#define __unroll(X) PRAGMA(unroll(X))
+#elif defined(__clang__)
+#define __unroll(X) PRAGMA(clang loop unroll_count(X))
+#elif defined(__GNUC__) || defined(__GNUG__)
+#define __unroll(X) PRAGMA(GCC unroll(X))
+#else
+// do nothing
+#define __unroll(X)
+// define here __unroll macro for your compiler
+#endif
+
 bool testEnv = false; //  when in testenv photo is saved 
 
 void enhanceScannedImage(cv::Mat& input, cv::Mat& output)
