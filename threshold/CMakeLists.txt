@@ -12,6 +12,36 @@ project(adaptiveThreshold)
 find_package(OpenCV REQUIRED)
 find_package(OpenMP REQUIRED)
 
+if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    message(FATAL_ERROR "32 bit architecture is not supported")
+endif()
+
+set(CID ${CMAKE_CXX_COMPILER_ID})
+if(WIN32 AND NOT "${CID}" STREQUAL "GNU")
+    if("${CID}" STREQUAL "Intel")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:native /fp:fast=2")
+    elseif("${CID}" STREQUAL "MSVC")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2 /fp:fast")
+    else()
+        message(FATAL_ERROR "Provide your own compile flags.")
+    endif()
+
+    # make sure the build is static in Windows (just openmp is not static)
+    if("${CID}" STREQUAL "Intel" OR "${CID}" STREQUAL "MSVC")
+        foreach(flag_var CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_RELEASE
+                CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+            if(${flag_var} MATCHES "/MD")
+                string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+            endif()
+        endforeach()
+    endif()
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math -march=native")
+    if("${CID}" STREQUAL "GNU")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++")
+    endif()
+endif()
+
 # If the package has been found, several variables will
 # be set, you can find the full list with descriptions
 # in the OpenCVConfig.cmake file.
@@ -23,8 +53,8 @@ message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 
 
 # Declare the executable target built from your sources
-add_executable(adaptiveThreshold_exe main.cpp)
+add_executable(enhanceScannedImage_exe main.cpp)
 
 # Link your application with OpenCV libraries
-target_link_libraries(adaptiveThreshold_exe  OpenMP::OpenMP_CXX ${OpenCV_LIBS})
-target_compile_options(adaptiveThreshold_exe PUBLIC ${OpenMP_CXX_FLAGS})
+target_link_libraries(enhanceScannedImage_exe  OpenMP::OpenMP_CXX ${OpenCV_LIBS})
+target_compile_options(enhanceScannedImage_exe PUBLIC ${OpenMP_CXX_FLAGS})
